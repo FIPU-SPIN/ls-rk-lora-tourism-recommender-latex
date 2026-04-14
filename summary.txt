@@ -1,0 +1,82 @@
+https://arxiv.org/pdf/2510.25093
+
+@article{yoo2025continual,
+  title={Continual Low-Rank Adapters for LLM-based Generative Recommender Systems},
+  author={Yoo, Hyunsik and Li, Ting-Wei and Kang, SeongKu and Liu, Zhining and Xu, Charlie and Qi, Qilin and Tong, Hanghang},
+  journal={arXiv e-prints},
+  pages={arXiv--2510},
+  year={2025}
+}
+
+LLM-based generative recommenders have become prominent by treating recommendation as a sequence generation task, yet they struggle with the continuous evolution of users, items, and preferences. Unlike other domains where tasks are typically disjoint, recommendation requires a unique balance of stability to preserve enduring user interests and plasticity to capture shifting trends. While Low-Rank Adaptation (LoRA) is a popular fine-tuning method due to its efficiency, simply evolving a single adapter sequentially often leads to catastrophic forgetting of useful past knowledge. Conversely, cumulative LoRA methods that sum multiple frozen adapters are often ineffective in recommendation because they entangle outdated preferences with relevant ones and suffer from growing storage costs.
+
+To address these limitations, the authors propose PESO (Proximally rEgularized Single evolving lOra), a method that maintains a single evolving adapter while anchoring each update to its most recent frozen state via a lightweight proximal term. This approach leverages a natural competition between data-fitting loss and the proximal regularizer, allowing the model to dynamically decide which parameters to adapt or retain based on current user behavior. Theoretically, this proximal design provides data-aware, direction-wise guidance within the LoRA subspace, ensuring updates are prioritized in directions strongly supported by new data while maintaining stability in others. The framework is further refined by a per-module softmax–Kullback–Leibler (KL) proximal that preserves internal module structures and leverages the previous state's information rather than treating all parameters uniformly.
+
+Empirical evaluations on multiple real-world datasets, including Amazon Review and Yelp, demonstrate that PESO consistently outperforms existing single-evolving and cumulative LoRA baselines in capturing user preference dynamics. Experimental analysis reveals that PESO achieves a superior stability–plasticity balance, excelling in predicting recommendations for both dormant users (testing retention) and new users (testing adaptation). Furthermore, the method is highly efficient, introducing negligible computational overhead and maintaining constant storage complexity regardless of the number of training stages. Ultimately, PESO provides a robust and scalable framework for the continual adaptation of foundational models in highly dynamic recommendation environments.
+
+
+https://aclanthology.org/2024.eacl-long.9.pdf
+
+@inproceedings{ravaut2024parameter,
+  title={Parameter-efficient conversational recommender system as a language processing task},
+  author={Ravaut, Mathieu and Zhang, Hao and Xu, Lu and Sun, Aixin and Liu, Yong},
+  booktitle={Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={152--165},
+  year={2024}
+}
+
+
+The proposed PECRS (Parameter-Efficient Conversational Recommender System) addresses the long-standing challenges of semantic misalignment and cumbersome training processes in conversational recommendation by reformulating the problem entirely as a natural language processing task. While traditional systems rely on complex combinations of dialogue models and external knowledge graphs, PECRS utilizes a single, frozen pre-trained language model backbone and represents items using rich textual metadata—including titles, actors, and plot descriptions—rather than non-textual nodes. This architecture allows the model to perform item recommendation and response generation within a unified framework that can be optimized in a single training stage using parameter-efficient fine-tuning (PEFT) techniques like LoRA. The system integrates a recommendation module consisting of retrieval and re-ranking processes with a response generation module focused on next-token prediction, all balanced through a joint loss function. Empirical evaluations on the ReDial and INSPIRED datasets show that PECRS is competitive with state-of-the-art methods and effectively scales to larger model backbones while maintaining low computational overhead. Additionally, the research provides a critical analysis of evaluation metrics, revealing that common diversity measures like Dist@K are unreliable for assessing conversation quality and advocating for more accurate reference-based metrics like ROUGE.
+
+
+https://arxiv.org/pdf/2408.03533
+
+@article{zhu2024lifelong,
+  title={Lifelong Personalized Low-Rank Adaptation of Large Language Models for Recommendation},
+  author={Zhu, Jiachen and Lin, Jianghao and Dai, Xinyi and Chen, Bo and Shan, Rong and Zhu, Jieming and Tang, Ruiming and Yu, Yong and Zhang, Weinan},
+  journal={arXiv e-prints},
+  pages={arXiv--2408},
+  year={2024}
+}
+
+
+The RecLoRA framework addresses three critical challenges in adapting large language models (LLMs) for recommendation: the lack of parameter-level personalization, the efficiency issues associated with long-term behavior sequences, and the scalability constraints of training on massive datasets. While existing methods typically use a static, shared Low-Rank Adaptation (LoRA) module for all users, the authors argue that this approach fails to capture unique user features and shifting preferences. To resolve this, RecLoRA introduces a Personalized LoRA module that maintains parallel meta-LoRA weights aggregated through a soft routing mechanism. This routing is guided by a pre-trained conventional recommendation model (CRM), which provides sample-level personalized representations to dynamically generate unique LoRA weights for each user. To further balance effectiveness and efficiency, the framework employs a Long-Short Modality Retriever that retrieves long history sequences for the ID-based CRM while keeping textual sequences for the LLM short, thereby leveraging lifelong behavior data without the prohibitive computational costs of long-form text prompts. Finally, the system utilizes a Few2Many Magnifier Strategy, where the CRM is pre-trained on the entire dataset to serve as a lens that allows the LLM to perceive the full training space even when fine-tuned on only a small fraction of the data. Extensive experiments on datasets such as MovieLens and GoodReads confirm that RecLoRA significantly outperforms state-of-the-art baselines, demonstrating superior sample efficiency and a robust trade-off between recommendation performance and inference time.
+
+
+https://dl.acm.org/doi/pdf/10.1145/3774778
+
+@article{kaur2026efficient,
+  title={Efficient and responsible adaptation of large language models for robust top-k recommendations},
+  author={Kaur, Kirandeep and Gupta, Vinayak and Chadha, Manya and Shah, Chirag},
+  journal={ACM Transactions on Recommender Systems},
+  volume={4},
+  number={3},
+  pages={1--31},
+  year={2026},
+  publisher={ACM New York, NY}
+}
+
+
+
+The paper introduces a hybrid task allocation framework designed to address the performance disparities in traditional recommendation systems (RSs), which often fail to accurately serve "weak users"—those with sparse interaction histories. While Large Language Models (LLMs) demonstrate strong zero-shot and few-shot ranking capabilities for users with limited data, their high computational cost and latency prevent their indiscriminate use across entire populations. To balance robustness and efficiency, the authors propose a two-phase strategy that first identifies weak users based on a combination of high interaction sparsity and poor ranking performance (AUC below a 0.5 threshold) from conventional models. In the second phase, the interaction histories of these identified weak users are contextualized into natural language instructions using in-context learning, allowing an LLM to perform personalized ranking only where traditional RSs struggle. Extensive evaluations across three real-world datasets—MovieLens-1M, Amazon Software, and Amazon Video Games—using both open- and closed-source LLMs like GPT-4 and LLaMA 3, show that this targeted approach reduces the number of weak users by approximately 12% while significantly improving recommendation quality. Beyond performance gains, the hybrid framework demonstrates high scalability, achieving over 60% reduction in token usage and approximately 70% savings in latency compared to routing all users through an LLM. Ultimately, this research provides a principled and cost-effective paradigm for integrating generative models into recommendation pipelines to enhance user-side fairness and system robustness.
+
+
+
+
+https://dl.acm.org/doi/pdf/10.1145/3640457.3688134
+
+@inproceedings{yang2024mlora,
+  title={Mlora: Multi-domain low-rank adaptive network for ctr prediction},
+  author={Yang, Zhiming and Gao, Haining and Gao, Dehong and Yang, Luwei and Yang, Libin and Cai, Xiaoyan and Ning, Wei and Zhang, Guannan},
+  booktitle={Proceedings of the 18th ACM Conference on Recommender Systems},
+  pages={287--297},
+  year={2024}
+}
+
+
+The MLoRA (Multi-domain Low-Rank Adaptive network) framework addresses the critical challenges of multi-domain Click-Through Rate (CTR) prediction, where large-scale platforms must balance general user behavior with the unique data distributions and sparsity found in diverse thematic domains. Traditional approaches typically rely on either independent models for each domain, which suffer from data sparsity, or unified models that mix data but fail to capture domain-specific diversity. While some existing multi-domain frameworks attempt to solve this by introducing task-specific components, they often lead to a prohibitive increase in model parameters and remain prone to under-fitting in domains with limited data.
+
+To overcome these hurdles, MLoRA introduces specialized low-rank adaptive modules for each domain, inspired by the success of LoRA in fine-tuning large language models. The architecture utilizes a two-phase training strategy: in the pretraining phase, a shared backbone network is trained on massive datasets to learn generalizable information across all domains; in the fine-tuning phase, the backbone is frozen while domain-specific, low-rank matrices (A and B) are trained to capture personalized, distinctive information. This design is model-agnostic, allowing it to be integrated into various deep-learning CTR models—such as Wide & Deep, PNN, and DeepFM—to enhance their performance with minimal computational overhead.
+
+Experimental results across public datasets like Taobao, Amazon, and MovieLens confirm that MLoRA consistently outperforms state-of-the-art baselines by effectively alleviating data sparsity and capturing inter-domain relationships. The framework’s practical utility is further validated by its successful deployment on Alibaba.com, where it integrated ten core recommendation domains. In this real-world production environment, MLoRA achieved a 1.49% increase in CTR and a 3.37% increase in order conversion rate, while only requiring a 1.76% increase in total parameter size. Ultimately, MLoRA provides a highly scalable and efficient paradigm for maintaining high-performance recommendation systems in complex, multi-domain industrial settings.
+

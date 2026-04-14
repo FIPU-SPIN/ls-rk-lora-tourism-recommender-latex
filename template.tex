@@ -174,9 +174,18 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 
 \section{Introduction}
 
-The template details the sections that can be used in a manuscript. Note that the order and names of article sections may differ from the requirements of the journal (e.g., the positioning of the Materials and Methods section). Please check the instructions on the authors' page of the journal to verify the correct order and names. For any questions, please contact the editorial office of the journal or support@mdpi.com. For LaTeX-related questions please contact latex@mdpi.com.%\endnote{This is an endnote.} % To use endnotes, please un-comment \printendnotes below (before References). Only journal Laws uses \footnote.
+The integration of Large Language Models (LLMs) into recommendation systems has fundamentally transformed the field, treating recommendation as a sequence generation task. However, adapting these models to dynamic user preferences presents significant challenges regarding stability and plasticity. To address the continuous evolution of users and items, recent research has explored parameter-efficient fine-tuning (PEFT) methods like Low-Rank Adaptation (LoRA); for instance, the PESO framework maintains a single evolving adapter anchored by a proximal term to dynamically capture new user behaviors while mitigating the catastrophic forgetting associated with sequential updates \citep{yoo2025continual}. 
 
-% The order of the section titles is different for some journals. Please refer to the "Instructions for Authors” on the journal homepage.
+Transitioning LLMs into conversational recommenders introduces additional complexities, particularly concerning semantic misalignment and cumbersome training processes. To streamline this, the PECRS framework reformulates the problem entirely as a natural language processing task, utilizing a frozen pre-trained language model and rich textual metadata to perform both item recommendation and response generation. This unified architecture can be optimized in a single training stage using PEFT techniques, significantly reducing computational overhead \citep{ravaut2024parameter}. 
+
+While efficiency is crucial, standard PEFT methods often lack parameter-level personalization because they rely on a static, shared LoRA module for all users. The RecLoRA framework addresses this by introducing a Personalized LoRA module, which dynamically generates unique weights for each user through a soft routing mechanism guided by a conventional recommendation model \citep{zhu2024lifelong}. 
+
+Beyond parameter adaptation, prompt engineering and in-context learning offer alternative pathways for efficient LLM integration. Because routing all users through an LLM is computationally prohibitive, recent hybrid task allocation frameworks propose identifying "weak users" with sparse interaction histories and contextualizing their data into natural language instructions. This targeted approach drastically reduces token usage and latency while improving recommendation quality where traditional systems struggle \citep{kaur2026efficient}. 
+
+Finally, applying these adaptations in complex, multi-domain industrial settings requires balancing general user behavior with domain-specific data sparsity. Frameworks such as MLoRA achieve this by combining a shared backbone, which learns generalizable information across domains, with specialized low-rank adaptive modules tailored to capture distinctive, domain-specific features \citep{yang2024mlora}.
+
+
+% [Final paragraph describing this paper's specific contribution to be inserted here]
 
 \section{Background and Related Work}
 
@@ -306,7 +315,7 @@ tf32 & TensorFloat-32\\
 %=====================================
 % References, variant A: external bibliography
 %=====================================
-\bibliography{your_external_BibTeX_file}
+\bibliography{references}
 
 % If authors have biography, please use the format below
 %\section*{Short Biography of Authors}
