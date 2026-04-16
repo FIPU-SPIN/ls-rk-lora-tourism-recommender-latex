@@ -77,7 +77,7 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{Title}
+\Title{Evaluating Parameter-Efficient Fine-Tuning vs. Prompt Engineering for Profile-Driven Recommendations}
 
 % Author Orchid ID: enter ID or remove command
 \newcommand{\orcidauthorA}{0009-0004-4210-5756} % RK
@@ -117,10 +117,10 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{A single paragraph of about 200 words maximum. For research articles, abstracts should give a pertinent overview of the work. We strongly encourage authors to use the following style of structured abstracts, but without headings: (1) Background: place the question addressed in a broad context and highlight the purpose of the study; (2) Methods: describe briefly the main methods or treatments applied; (3) Results: summarize the article's main findings; (4) Conclusions: indicate the main conclusions or interpretations. The abstract should be an objective representation of the article, it must not contain results which are not presented and substantiated in the main text and should not exaggerate the main conclusions.}
+\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study evaluates the performance trade-offs between parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared: PEFT, specifically utilizing Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against robust prompt engineering strategies optimizing input instructions without altering model weights. The approaches were systematically evaluated using standard ranking metrics, including Normalized Discounted Cumulative Gain (NDCG@K) and Hit Ratio (HR@K), alongside computational efficiency measures. Our findings demonstrate that while few-shot prompt engineering establishes a competitive baseline, PEFT methods, particularly LoRA, achieve superior alignment with nuanced user preferences, yielding significant improvements in ranking accuracy. Furthermore, PEFT effectively mitigates context-window limitations, reducing inference latency compared to extensive prompt demonstrations. Consequently, we conclude that adapter-based fine-tuning provides more reliable and scalable personalized recommendations from structured catalogs than prompt engineering alone, successfully bridging raw LLM reasoning with strict domain-specific requirements.}
 
 % Keywords
-\keyword{keyword 1; keyword 2; keyword 3 (List three to ten pertinent keywords specific to the article; yet reasonably common within the subject discipline.)} 
+\keyword{large language models; parameter-efficient fine-tuning; prompt engineering; recommender systems; Low-Rank Adaptation (LoRA); structured data processing; in-context learning}
 
 % The fields PACS, MSC, and JEL may be left empty or commented out if not applicable
 %\PACS{J0101}
