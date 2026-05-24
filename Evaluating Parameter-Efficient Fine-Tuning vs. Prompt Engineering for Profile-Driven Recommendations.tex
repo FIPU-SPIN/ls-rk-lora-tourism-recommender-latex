@@ -80,30 +80,30 @@
 \Title{Evaluating Parameter-Efficient Fine-Tuning vs. Prompt Engineering for Profile-Driven Recommendations}
 
 % Author Orchid ID: enter ID or remove command
-\newcommand{\orcidauthorA}{0009-0004-4210-5756} % RK
-\newcommand{\orcidauthorB}{0009-0002-1965-7822}%LS
+\newcommand{\orcidauthorA}{0009-0002-1965-7822}%LS
+\newcommand{\orcidauthorB}{0009-0004-4210-5756}%RK
 \newcommand{\orcidauthorC}{0000-0002-3015-1024}%SBS
 \newcommand{\orcidauthorE}{0000-0002-5964-245X}%IL
 %\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
 
 % Authors, for the paper (add full first names)
-\Author{Ratomir Karlović $^{1}$\orcidA{}, Luka Sever $^{1}$\orcidB{}, Sandi Baressi Šegota $^{1}$\orcidC{} and Ivan Lorencin $^{1}$\orcidE{}}
+\Author{Luka Sever $^{1}$\orcidA{}, Ratomir Karlović $^{1}$\orcidB{}, Sandi Baressi Šegota $^{1}$\orcidC{} and Ivan Lorencin $^{1}$\orcidE{}}
 
 %\longauthorlist{yes}
 
 % MDPI internal command: Authors, for metadata in PDF
-\AuthorNames{Firstname Lastname, Firstname Lastname and Firstname Lastname}
+\AuthorNames{Luka Sever, Ratomir Karlović, Sandi Baressi Šegota and Ivan Lorencin}
 
 %\longauthorlist{yes}
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
 \address{%
-$^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebačka 30, 52100 Pula, Croatia;\\ ratomir.karlovic@unipu.hr (R.K.), luka.sever@unipu.hr (L.S.), sandi.baressi.segota@unipu.hr (S.B.Š.), ivan.lorencin@unipu.hr (I.L.)\\
+$^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebačka 30, 52100 Pula, Croatia;\\ luka.sever@unipu.hr (L.S.), ratomir.karlovic@unipu.hr (R.K.), sandi.baressi.segota@unipu.hr (S.B.Š.), ivan.lorencin@unipu.hr (I.L.)\\
 % $^{2}$ \quad Affiliation 2; e-mail@e-mail.com
 }
 
 % Contact information of the corresponding author
-\corres{Correspondence: e-mail@e-mail.com;}
+\corres{Correspondence: sandi.baressi.segota@unipu.hr}
 
 % Current address and/or shared authorship
 %\firstnote{Current address: Affiliation.}  
@@ -202,13 +202,54 @@ Conversely, prompt engineering offers an effective alternative that completely a
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
 
-Materials and Methods should be described with sufficient details to allow others to replicate and build on published results. Please note that publication of your manuscript implicates that you must make all materials, data, computer code, and protocols associated with the publication available to readers. Please disclose at the submission stage any restrictions on the availability of materials or information. New methods and protocols should be described in detail while well-established methods can be briefly described and appropriately cited.
+This section details the experimental framework designed to evaluate and compare the efficacy of parameter-efficient fine-tuning (PEFT) against prompt engineering for personalized point-of-interest (POI) recommendation. We outline the data collection process, the synthesis of user profiles for ground-truth annotation, the retrieval-augmented generation (RAG) pipeline, and the specific adaptation strategies applied to the foundation models.
 
-Research manuscripts reporting large datasets that are deposited in a publicly avail-able database should specify where the data have been deposited and provide the relevant accession numbers. If the accession numbers have not yet been obtained at the time of submission, please state that they will be provided during review. They must be provided prior to publication.
+\subsection{System Architecture Overview}
 
-Interventionary studies involving animals or humans, and other studies require ethical approval must list the authority that provided approval and the corresponding ethical approval code.
+The proposed recommendation system is evaluated through a RAG framework tailored for structured POI data. The architecture deliberately isolates the retrieval mechanism to ensure a controlled, isolated comparison between two distinct Large Language Model (LLM) adaptation paradigms: Prompt Engineering and PEFT. Three foundation models—Llama 3.1 8B, Qwen 3 4B, and Llama 3.2 3B—are evaluated to assess the scalability, robustness, and architectural generalizability of these adaptation strategies.
 
-In this section, where applicable, authors are required to disclose details of how gen-erative artificial intelligence (GenAI) has been used in this paper (e.g., to generate text, data, or graphics, or to assist in study design, data collection, analysis, or interpretation). The use of GenAI for superficial text editing (e.g., grammar, spelling, punctuation, and formatting) does not need to be declared.
+\subsection{Data Collection and Vector Indexing}
+To simulate a real-world local recommendation engine, an exhaustive dataset of POIs within the city of Pula, Croatia, was curated via web scraping. The collected data spans multiple domains, including gastronomy, cultural heritage sites, and recreational areas.
+
+The raw data was formalized into a standardized JSON schema. Each POI is represented as a single JSON object containing a categorical type and a nested properties dictionary. To enrich the semantic density of the dataset and improve personalized retrieval, the following key metadata fields were populated:
+
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item Taxonomy Tags: An array of descriptors (e.g., mediterranean, vegetarian) defining the core attributes of the POI.
+\item Binary and Categorical Constraints: Features such as outdoor\_seating, indoor\_seating, and price (e.g., low, medium, high) that serve as strict filtering criteria.
+\item Contextual Narratives: Comprehensive textual descriptions and up to three verified user reviews to provide the embedding model with nuanced sentiment and atmospheric context.
+\end{itemize}\vspace{3pt}
+
+Each JSON object was treated as an independent document chunk. To enable dense retrieval, embeddings were generated using the nomic-embed-text:v1.5 model, selected for its strong performance on heterogeneous text structures. The resulting vectors were indexed using Facebook AI Similarity Search (FAISS) to facilitate efficient similarity computations.
+
+\subsection{Synthetic User Profile Generation and Ground Truth Annotation}
+Evaluating personalized recommendations necessitates a dataset that accurately models diverse user intents and constraints. We synthetically generated 5000 unique user profiles. Each profile represents a distinct permutation of demographic and behavioral traits, mapped to the JSON schema:
+
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item Demographics: gender, age, and nationality to simulate cultural and generational variance.
+\item Behavioral Archetypes: travel\_style (e.g., backpacker, luxury) and persona (e.g., pet\_owner) to establish the user's primary motivation.
+\item Explicit Preferences: likes and dislikes structured as arrays of venue tags to serve as positive and negative alignment vectors.
+\item Quantitative Constraints: price\_preference and min\_rating to bound the acceptable POI thresholds.
+\item Natural Language Query (input): A conversational prompt synthesized from the profile's constraints (e.g., "Any nice outdoor spots where I can bring my pet?").
+\end{itemize}\vspace{3pt}
+
+To establish a high-quality ground truth for training and evaluation, the Qwen 3.6 35B model was utilized to generate initial recommendation responses for all 5000 queries. Because personalized recommendation is inherently subjective, human annotators were employed to blindly review and validate the relevance of the generated recommendations against the explicit constraints of the user profiles.
+
+To ensure the scientific rigor of the dataset, Cohen's Kappa ($\kappa$) was calculated to measure inter-rater reliability among the human annotators. Only the subset of responses that achieved absolute consensus (i.e., unanimously marked as correct by all annotators) was retained for the PEFT training corpus. Responses exhibiting annotator disagreement or partial correctness were isolated and repurposed for the benchmark testing dataset, ensuring the models are evaluated on the most challenging, highly subjective edge cases.
+
+\subsection{Retrieval and Context Injection Pipeline}
+During inference, a standardized retrieval pipeline is maintained across all evaluated models to isolate the impact of the LLM adaptation strategy. For a given user input, the query is embedded and searched against the FAISS index.Initially, the vector database retrieves the top $K=30$ candidate chunks based on vector distance. To maximize the signal-to-noise ratio within the LLM context window, these 30 candidates are subsequently filtered, and only the top 10 most relevant JSON chunks are injected directly into the LLM prompt.
+
+\subsection{LLM Adaptation Strategies}
+The study contrasts a robust Prompt Engineering baseline against two state-of-the-art PEFT methodologies:
+
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item Prompt Engineering (Baseline): The foundation models are augmented with extended, highly structured system instructions. This method relies entirely on in-context learning, leveraging the top 10 retrieved chunks without any underlying weight updates.
+\item Parameter-Efficient Fine-Tuning (PEFT): The models are fine-tuned on the consensus-driven training set using two distinct adapter mechanisms:
+\begin{itemize}[labelsep=2.5mm,topsep=-3pt]
+\item Low-Rank Adaptation (LoRA): Freezes the pre-trained model weights and injects trainable rank decomposition matrices into the transformer architecture, allowing the model to learn domain-specific ranking logic.
+\item IA$^3$ (Infused Adapter by Inhibiting and Amplifying Inner Activations): A highly efficient alternative that scales inner activations using learned vectors, significantly reducing the number of trainable parameters and computational overhead compared to LoRA.
+\end{itemize}\vspace{3pt}
+\end{itemize}\vspace{3pt}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results and discussion}
