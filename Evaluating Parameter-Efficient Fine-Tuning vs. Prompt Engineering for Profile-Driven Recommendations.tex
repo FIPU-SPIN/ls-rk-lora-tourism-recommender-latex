@@ -117,7 +117,7 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study evaluates the performance trade-offs between parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared: PEFT, specifically utilizing Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against robust prompt engineering strategies optimizing input instructions without altering model weights. The approaches were systematically evaluated using standard ranking metrics, including Normalized Discounted Cumulative Gain (NDCG@K) and Hit Ratio (HR@K), alongside computational efficiency measures. Our findings demonstrate that while prompt engineering establishes a competitive baseline, PEFT methods, particularly LoRA, achieve superior alignment with nuanced user preferences, yielding significant improvements in ranking accuracy. Furthermore, PEFT effectively mitigates context-window limitations, reducing inference latency compared to extensive prompt demonstrations. Consequently, we conclude that adapter-based fine-tuning provides more reliable and scalable personalized recommendations from structured catalogs than prompt engineering alone, successfully bridging raw LLM reasoning with strict domain-specific requirements.}
+\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1,521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041) and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
 
 % Keywords
 \keyword{large language models; parameter-efficient fine-tuning; prompt engineering; recommender systems; Low-Rank Adaptation (LoRA); structured data processing; in-context learning}
@@ -203,16 +203,16 @@ In domain-specific applications, Guo et al. utilized Quantized LoRA within the T
 
 Conversely, prompt engineering offers an effective alternative that completely avoids altering model weights. Nikolaychuk and Poddubniy applied prompt engineering to the Saiga2 model to automatically extract and classify user sentiments from regional tourism data, successfully achieving high alignment with human expert evaluations \citep{nikolaychuk2024analysis}. To resolve the complex challenges of intent recognition and factual hallucinations, Huang et al. proposed a multi-layer prompt engineering architecture that decomposes user queries into sequential subtasks. By integrating this step-by-step reasoning strategy with real-time external APIs, their system drastically reduced hallucination rates, proving particularly effective for lightweight models in travel planning applications \citep{huang2025multi}.
 
-Based on the cumulative evidence from previous studies, the goal of this work is to examine how adapter-based PEFT compares with prompt engineering strategies for personalized item recommendation. In particular, the study explores how different adaptation approaches influence ranking accuracy and computational efficiency when utilizing explicit user profiles and structured JSON-formatted catalogs. Guided by prior literature, the following hypotheses are considered:
+Based on the cumulative evidence from previous studies, the goal of this work is to examine how adapter-based PEFT compares with prompt engineering strategies for personalized item recommendation. Because personalized recommendation is inherently subjective and lacks an objective ground truth, the study assesses how consistently independent human annotators judge the recommendations produced under each adaptation approach, quantified using Fleiss' kappa. In particular, the study explores how different adaptation approaches, utilizing explicit user profiles and structured JSON-formatted catalogs, influence this agreement. Guided by prior literature, the following hypotheses are considered:
 
 \begin{itemize}
-\item H1: PEFT methods may provide improvements in recommendation ranking metrics, such as NDCG and HR, compared to prompt-based adaptation strategies.
+\item H1: Annotator judgments of recommendations generated under every adaptation strategy may reach at least substantial agreement ($\kappa > 0.60$), indicating that the annotation protocol is reliable regardless of the adaptation method.
 
-\item H2: Adapter-based fine-tuning may reduce inference latency and mitigate context-window limitations compared to few-shot prompt engineering.
+\item H2: Recommendations generated by PEFT-adapted models may be judged more consistently (higher $\kappa$) than those generated by the prompt-engineered baseline of the same foundation model, as fine-tuning may align outputs more closely with explicit user preferences.
 
-\item H3: LoRA-based adapters may achieve higher ranking accuracy in personalized recommendation tasks than other parameter-efficient techniques such as IA$^3$.
+\item H3: LoRA-based adapters may yield higher annotator agreement than other parameter-efficient techniques such as IA$^3$.
 
-\item H4: Prompt engineering may establish a functional baseline for in-context learning, while PEFT may provide better alignment with explicit user preferences.
+\item H4: The relative ordering of adaptation strategies may be consistent across foundation models of different size and generation (Llama 3.1 8B and Llama 3.2 3B), indicating that the findings generalize beyond a single architecture.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -222,7 +222,7 @@ This section details the experimental framework designed to evaluate and compare
 
 \subsection{System Architecture Overview}
 
-The proposed recommendation system is evaluated through a RAG framework tailored for structured POI data. The architecture deliberately isolates the retrieval mechanism to ensure a controlled, isolated comparison between two distinct Large Language Model (LLM) adaptation paradigms: Prompt Engineering and PEFT. Three foundation models—Llama 3.1 8B, Qwen 3 4B, and Llama 3.2 3B—are evaluated to assess the scalability, robustness, and architectural generalizability of these adaptation strategies.
+The proposed recommendation system is evaluated through a RAG framework tailored for structured POI data. The architecture deliberately isolates the retrieval mechanism to ensure a controlled, isolated comparison between two distinct Large Language Model (LLM) adaptation paradigms: Prompt Engineering and PEFT. Two foundation models—Llama 3.1 8B and Llama 3.2 3B—are evaluated to assess the scalability, robustness, and architectural generalizability of these adaptation strategies.
 
 \subsection{Data Collection and Vector Indexing}
 To simulate a real-world local recommendation engine, an exhaustive dataset of POIs within the city of Pula, Croatia, was curated via web scraping. The collected data spans multiple domains, including gastronomy, cultural heritage sites, and recreational areas.
@@ -250,7 +250,7 @@ Evaluating personalized recommendations necessitates a dataset that accurately m
 
 To establish a high-quality ground truth for training and evaluation, the Qwen 3.6 35B model was utilized to generate initial recommendation responses for all 5000 queries. Because personalized recommendation is inherently subjective, human annotators were employed to blindly review and validate the relevance of the generated recommendations against the explicit constraints of the user profiles.
 
-To ensure the scientific rigor of the dataset, Cohen's Kappa ($\kappa$) was calculated to measure inter-rater reliability among the human annotators. Only the subset of responses that achieved absolute consensus (i.e., unanimously marked as correct by all annotators) was retained for the PEFT training corpus. Responses exhibiting annotator disagreement or partial correctness were isolated and repurposed for the benchmark testing dataset, ensuring the models are evaluated on the most challenging, highly subjective edge cases.
+To ensure the scientific rigor of the dataset, Fleiss' kappa ($\kappa$) was calculated to measure inter-rater reliability among the three human annotators. Fleiss' kappa was selected because it extends chance-corrected agreement to more than two raters, and its definition is given in Section~\ref{sec:eval}. Only the subset of responses that achieved absolute consensus (i.e., unanimously marked as correct by all annotators) was retained for the PEFT training corpus. Responses exhibiting annotator disagreement or partial correctness were isolated and repurposed for the benchmark testing dataset, ensuring the models are evaluated on the most challenging, highly subjective edge cases.
 
 \subsection{Retrieval and Context Injection Pipeline}
 During inference, a standardized retrieval pipeline is maintained across all evaluated models to isolate the impact of the LLM adaptation strategy. For a given user input, the query is embedded and searched against the FAISS index.Initially, the vector database retrieves the top $K=30$ candidate chunks based on vector distance. To maximize the signal-to-noise ratio within the LLM context window, these 30 candidates are subsequently filtered, and only the top 10 most relevant JSON chunks are injected directly into the LLM prompt.
@@ -266,6 +266,23 @@ The study contrasts a robust Prompt Engineering baseline against two state-of-th
 \item IA$^3$ (Infused Adapter by Inhibiting and Amplifying Inner Activations): A highly efficient alternative that scales inner activations using learned vectors, significantly reducing the number of trainable parameters and computational overhead compared to LoRA.
 \end{itemize}\vspace{3pt}
 \end{itemize}\vspace{3pt}
+
+\subsection{Evaluation Protocol and Inter-Rater Agreement}\label{sec:eval}
+Six configurations were evaluated: Llama 3.1 8B and Llama 3.2 3B, each under prompt engineering, LoRA and IA$^3$. Each configuration generated recommendations for the same set of 1,521 user queries. For every recommendation, the three annotators independently assigned one of three labels: 1 (the annotator agrees with the recommendation), $-1$ (the annotator disagrees) or 0 (neither). Since no objective ground truth exists for subjective recommendation quality, the evaluation relies on the consistency of these independent judgments, quantified with Fleiss' kappa.
+
+Let $N$ be the number of evaluated recommendations, $n=3$ the number of annotators, $k=3$ the number of categories, and $n_{ij}$ the number of annotators who assigned recommendation $i$ to category $j$. The observed agreement for a single recommendation and its mean are
+
+\begin{equation}
+P_i = \frac{1}{n(n-1)}\left(\sum_{j=1}^{k} n_{ij}^{2} - n\right), \qquad \bar{P} = \frac{1}{N}\sum_{i=1}^{N} P_i .
+\end{equation}
+
+The expected chance agreement is computed from the overall proportion $p_j$ of ratings in each category, and Fleiss' kappa follows as
+
+\begin{equation}
+p_j = \frac{1}{Nn}\sum_{i=1}^{N} n_{ij}, \qquad \bar{P}_e = \sum_{j=1}^{k} p_j^{2}, \qquad \kappa = \frac{\bar{P} - \bar{P}_e}{1 - \bar{P}_e}.
+\end{equation}
+
+A value of $\kappa = 1$ indicates perfect agreement, while $\kappa = 0$ indicates agreement no better than chance. Values are interpreted using the scale of Landis and Koch \citep{landis1977measurement}: slight (0.01--0.20), fair (0.21--0.40), moderate (0.41--0.60), substantial (0.61--0.80) and almost perfect (0.81--1.00) agreement \citep{fleiss1971measuring}. Fleiss' kappa expresses how consistently annotators judge the recommendations, not whether the judgments are correct. Uncertainty was estimated by nonparametric bootstrap, resampling queries with replacement (4000 replicates) and reporting 95\% percentile intervals. Differences between configurations were evaluated with a paired bootstrap on the same resampled queries.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results and discussion}
@@ -357,7 +374,6 @@ IA$^3$ & Infused Adapter by Inhibiting and Amplifying Inner Activations\\
 ICL & In-Context Learning\\
 JSON & JavaScript Object Notation\\
 SFT & Supervised Fine-Tuning\\
-F1 & F1 Score\\
 GPU & Graphics Processing Unit\\
 DDP & Distributed Data Parallel\\
 MLP & Multi-Layer Perceptron\\
@@ -409,4 +425,3 @@ tf32 & TensorFloat-32\\
 \end{adjustwidth}
 %} % If the paper is ``preprints'', please uncomment this parenthesis.
 \end{document}
-
