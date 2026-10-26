@@ -117,7 +117,7 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1,521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041) and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
+\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1,521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041), only one of them (LoRA on Llama 3.1 8B) remained statistically significant after correction for multiple comparisons, and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
 
 % Keywords
 \keyword{large language models; parameter-efficient fine-tuning; prompt engineering; recommender systems; Low-Rank Adaptation (LoRA); structured data processing; in-context learning}
@@ -250,7 +250,7 @@ Evaluating personalized recommendations necessitates a dataset that accurately m
 
 To establish a high-quality ground truth for training and evaluation, the Qwen 3.6 35B model was utilized to generate initial recommendation responses for all 5000 queries. Because personalized recommendation is inherently subjective, human annotators were employed to blindly review and validate the relevance of the generated recommendations against the explicit constraints of the user profiles.
 
-To ensure the scientific rigor of the dataset, Fleiss' kappa ($\kappa$) was calculated to measure inter-rater reliability among the three human annotators. Fleiss' kappa was selected because it extends chance-corrected agreement to more than two raters, and its definition is given in Section~\ref{sec:eval}. Only the subset of responses that achieved absolute consensus (i.e., unanimously marked as correct by all annotators) was retained for the PEFT training corpus. Responses exhibiting annotator disagreement or partial correctness were isolated and repurposed for the benchmark testing dataset, ensuring the models are evaluated on the most challenging, highly subjective edge cases.
+Each of the three annotators independently marked every response with 1 (agree), 0 (neither) or $-1$ (disagree). The queries for which all three annotators marked the response with 1 were used to train the adapters (2609 queries) and to validate them (870 queries). The remaining 1521 queries, for which at least one annotator did not mark the response with 1, formed the test set. These queries are the most challenging and subjective cases in the dataset.
 
 \subsection{Retrieval and Context Injection Pipeline}
 During inference, a standardized retrieval pipeline is maintained across all evaluated models to isolate the impact of the LLM adaptation strategy. For a given user input, the query is embedded and searched against the FAISS index.Initially, the vector database retrieves the top $K=30$ candidate chunks based on vector distance. To maximize the signal-to-noise ratio within the LLM context window, these 30 candidates are subsequently filtered, and only the top 10 most relevant JSON chunks are injected directly into the LLM prompt.
@@ -268,7 +268,7 @@ The study contrasts a robust Prompt Engineering baseline against two state-of-th
 \end{itemize}\vspace{3pt}
 
 \subsection{Evaluation Protocol and Inter-Rater Agreement}\label{sec:eval}
-Six configurations were evaluated: Llama 3.1 8B and Llama 3.2 3B, each under prompt engineering, LoRA and IA$^3$. Each configuration generated recommendations for the same set of 1,521 user queries. For every recommendation, the three annotators independently assigned one of three labels: 1 (the annotator agrees with the recommendation), $-1$ (the annotator disagrees) or 0 (neither). Since no objective ground truth exists for subjective recommendation quality, the evaluation relies on the consistency of these independent judgments, quantified with Fleiss' kappa.
+Six configurations were evaluated: Llama 3.1 8B and Llama 3.2 3B, each under prompt engineering, LoRA and IA$^3$. Each configuration generated recommendations for the same set of 1521 test queries. The same three annotators rated all recommendations. They were not told which model or adaptation method produced each recommendation. For every recommendation, the three annotators independently assigned one of three labels: 1 (the annotator agrees with the recommendation), $-1$ (the annotator disagrees) or 0 (neither). Since no objective ground truth exists for subjective recommendation quality, the evaluation relies on the consistency of these independent judgments, quantified with Fleiss' kappa.
 
 Let $N$ be the number of evaluated recommendations, $n=3$ the number of annotators, $k=3$ the number of categories, and $n_{ij}$ the number of annotators who assigned recommendation $i$ to category $j$. The observed agreement for a single recommendation and its mean are
 
@@ -282,13 +282,110 @@ The expected chance agreement is computed from the overall proportion $p_j$ of r
 p_j = \frac{1}{Nn}\sum_{i=1}^{N} n_{ij}, \qquad \bar{P}_e = \sum_{j=1}^{k} p_j^{2}, \qquad \kappa = \frac{\bar{P} - \bar{P}_e}{1 - \bar{P}_e}.
 \end{equation}
 
-A value of $\kappa = 1$ indicates perfect agreement, while $\kappa = 0$ indicates agreement no better than chance. Values are interpreted using the scale of Landis and Koch \citep{landis1977measurement}: slight (0.01--0.20), fair (0.21--0.40), moderate (0.41--0.60), substantial (0.61--0.80) and almost perfect (0.81--1.00) agreement \citep{fleiss1971measuring}. Fleiss' kappa expresses how consistently annotators judge the recommendations, not whether the judgments are correct. Uncertainty was estimated by nonparametric bootstrap, resampling queries with replacement (4000 replicates) and reporting 95\% percentile intervals. Differences between configurations were evaluated with a paired bootstrap on the same resampled queries.
+A value of $\kappa = 1$ indicates perfect agreement, while $\kappa = 0$ indicates agreement no better than chance. Values are interpreted using the scale of Landis and Koch \citep{landis1977measurement}: slight (0.01--0.20), fair (0.21--0.40), moderate (0.41--0.60), substantial (0.61--0.80) and almost perfect (0.81--1.00) agreement \citep{fleiss1971measuring}. Fleiss' kappa expresses how consistently annotators judge the recommendations, not whether the judgments are correct. Uncertainty was estimated by nonparametric bootstrap, resampling queries with replacement (20,000 replicates) and reporting 95\% percentile intervals. Six comparisons were planned: each adapter configuration against the same model without an adapter (four comparisons), and LoRA against IA$^3$ for each model (two comparisons). The differences in kappa were estimated with a paired bootstrap on the same resampled queries. Because six comparisons were made, the two-sided p-values were adjusted with the Holm method, which reduces the chance of false positive findings when several comparisons are tested together.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results and discussion}
+\section{Results and discussion}\label{sec:results}
+
+This section reports the inter-rater agreement for the six configurations on the test set of 1521 queries. Three annotators rated each recommendation, which gives 4563 ratings for each configuration. The results are presented in four parts: the agreement for each configuration, the distribution of the labels, the comparison of the adaptation strategies, and a discussion of the findings.
+
+\subsection{Agreement for Each Configuration}
+Table~\ref{tab:kappa} shows Fleiss' kappa, its 95\% confidence interval, the observed agreement $\bar{P}$ and the chance agreement $\bar{P}_e$ for each configuration. Figure~\ref{fig:kappa} shows the kappa values.
+
+\begin{table}[H]
+\caption{Fleiss' kappa ($\kappa$), 95\% bootstrap confidence interval (CI), observed agreement ($\bar{P}$) and chance agreement ($\bar{P}_e$) for the six configurations on the 1521 test queries.}\label{tab:kappa}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{lCCCC}
+\toprule
+Configuration & $\kappa$ & 95\% CI & $\bar{P}$ & $\bar{P}_e$\\
+\midrule
+Llama 3.1 8B & 0.863 & 0.840 to 0.884 & 0.926 & 0.464\\
+Llama 3.1 8B + LoRA & 0.902 & 0.882 to 0.920 & 0.950 & 0.487\\
+Llama 3.1 8B + IA$^3$ & 0.877 & 0.851 to 0.901 & 0.954 & 0.630\\
+Llama 3.2 3B & 0.875 & 0.854 to 0.895 & 0.930 & 0.439\\
+Llama 3.2 3B + LoRA & 0.888 & 0.869 to 0.906 & 0.937 & 0.435\\
+Llama 3.2 3B + IA$^3$ & 0.904 & 0.882 to 0.924 & 0.961 & 0.597\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=12 cm]{figures/fig_kappa.png}
+\caption{Fleiss' kappa for the six configurations. The error bars show the 95\% bootstrap confidence intervals.}\label{fig:kappa}
+\end{figure}
+
+Fleiss' kappa was between 0.863 and 0.904 for all six configurations. All values are in the almost perfect range (0.81 to 1.00) of the scale used in this study. The lower end of the 95\% confidence interval was at least 0.84 for every configuration. Hypothesis H1 is therefore supported: the annotators reached at least substantial agreement under every adaptation strategy.
+
+The observed agreement $\bar{P}$ was between 0.926 and 0.961. The chance agreement $\bar{P}_e$ was between 0.435 and 0.630. It is the agreement that would be expected if the annotators gave their labels independently, with the label frequencies of the configuration. Kappa measures how much of the agreement above this level was reached. $\bar{P}_e$ was higher for the two IA$^3$ configurations (0.630 and 0.597) than for the other four configurations (0.435 to 0.487), because label 1 was more frequent for the IA$^3$ configurations (Section~\ref{sec:labels}). For this reason, Llama 3.1 8B + IA$^3$ has the highest observed agreement of the three Llama 3.1 8B configurations (0.954), but a lower kappa (0.877) than Llama 3.1 8B + LoRA (0.902), which has an observed agreement of 0.950.
+
+\subsection{Distribution of the Labels}\label{sec:labels}
+Table~\ref{tab:labels} and Figure~\ref{fig:labels} show how often each label was used. These counts are descriptive. They are reported to show what the annotators decided and to explain the chance agreement in Table~\ref{tab:kappa}.
+
+\begin{table}[H]
+\caption{Number of ratings for each label and, in brackets, their share of the 4563 ratings given to each configuration (three annotators, 1521 queries), in percent.}\label{tab:labels}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{lCCC}
+\toprule
+Configuration & Label 1 (agree) & Label 0 (neither) & Label $-1$ (disagree)\\
+\midrule
+Llama 3.1 8B & 2720 (59.6) & 389 (8.5) & 1454 (31.9)\\
+Llama 3.1 8B + LoRA & 2862 (62.7) & 346 (7.6) & 1355 (29.7)\\
+Llama 3.1 8B + IA$^3$ & 3544 (77.7) & 389 (8.5) & 630 (13.8)\\
+Llama 3.2 3B & 2534 (55.5) & 441 (9.7) & 1588 (34.8)\\
+Llama 3.2 3B + LoRA & 2449 (53.7) & 417 (9.1) & 1697 (37.2)\\
+Llama 3.2 3B + IA$^3$ & 3414 (74.8) & 337 (7.4) & 812 (17.8)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=12 cm]{figures/fig_labels.png}
+\caption{Share of the ratings given to each label for the six configurations, in percent.}\label{fig:labels}
+\end{figure}
+
+Label 1 was given to 77.7\% of the ratings for Llama 3.1 8B + IA$^3$ and to 74.8\% for Llama 3.2 3B + IA$^3$. For the other four configurations, the share of label 1 was between 53.7\% and 62.7\%. Label $-1$ showed the opposite pattern: 13.8\% and 17.8\% for the two IA$^3$ configurations, and between 29.7\% and 37.2\% for the other four. Label 0 was used for between 7.4\% and 9.7\% of the ratings in every configuration. LoRA increased the share of label 1 for Llama 3.1 8B (62.7\% compared with 59.6\%) but not for Llama 3.2 3B (53.7\% compared with 55.5\%).
+
+These shares were not tested statistically, and Fleiss' kappa does not measure them. They show that the annotators agreed with the recommendations of the IA$^3$ configurations more often than with those of the other configurations. This may mean that the IA$^3$ recommendations matched the user profiles better, but this study did not test it.
+
+\subsection{Comparison of the Adaptation Strategies}
+Table~\ref{tab:comparisons} shows the six planned comparisons. The differences are given as the kappa of the first configuration minus the kappa of the second configuration.
+
+\begin{table}[H]
+\caption{Planned comparisons between configurations: difference in Fleiss' kappa, 95\% bootstrap confidence interval (CI) of the difference and p-value adjusted with the Holm method for six comparisons.}\label{tab:comparisons}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{XCCC}
+\toprule
+Comparison & Difference & 95\% CI & Adjusted p\\
+\midrule
+Llama 3.1 8B + LoRA vs. Llama 3.1 8B & $+0.039$ & 0.014 to 0.064 & 0.010\\
+Llama 3.1 8B + IA$^3$ vs. Llama 3.1 8B & $+0.014$ & $-0.016$ to 0.044 & 0.585\\
+Llama 3.2 3B + LoRA vs. Llama 3.2 3B & $+0.013$ & $-0.011$ to 0.037 & 0.585\\
+Llama 3.2 3B + IA$^3$ vs. Llama 3.2 3B & $+0.029$ & 0.002 to 0.055 & 0.164\\
+Llama 3.1 8B + LoRA vs. Llama 3.1 8B + IA$^3$ & $+0.025$ & $-0.003$ to 0.053 & 0.305\\
+Llama 3.2 3B + LoRA vs. Llama 3.2 3B + IA$^3$ & $-0.016$ & $-0.034$ to 0.003 & 0.305\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Hypothesis H2 expected that the models with adapters would be judged more consistently than the same models without adapters. All four adapter configurations had a higher kappa than the model without an adapter, with differences between $+0.013$ and $+0.039$. After the Holm correction, only the difference for LoRA on Llama 3.1 8B was statistically significant ($+0.039$, 95\% CI 0.014 to 0.064, adjusted p = 0.010). The difference for IA$^3$ on Llama 3.2 3B ($+0.029$) had an unadjusted p-value of 0.033 and an adjusted p-value of 0.164. H2 is therefore supported by the direction of all four differences, but by a statistically significant result for one comparison only.
+
+Hypothesis H3 expected that LoRA would reach a higher agreement than IA$^3$. LoRA had a higher kappa on Llama 3.1 8B ($+0.025$) and a lower kappa on Llama 3.2 3B ($-0.016$). Neither difference was statistically significant (adjusted p = 0.305 for both). H3 is not supported.
+
+Hypothesis H4 expected the same order of the strategies for both foundation models. The model without an adapter had the lowest kappa of its three configurations for both Llama 3.1 8B and Llama 3.2 3B. The order of LoRA and IA$^3$ was different for the two models. The difference between the LoRA and IA$^3$ results was 0.041 larger for Llama 3.1 8B than for Llama 3.2 3B (95\% CI 0.008 to 0.074). This comparison was not one of the six planned comparisons and was not adjusted. H4 is therefore supported for the position of the model without an adapter, but not for the order of the two adapters.
+
+\subsection{Discussion}
+The annotators reached almost perfect agreement for all six configurations. The test set contained only queries for which the three annotators had not all marked the initial response with 1 during the ground truth annotation. Even so, the observed agreement for the recommendations of the six configurations was between 0.926 and 0.961. The annotators did not know which configuration produced each recommendation, so the agreement does not depend on knowledge of the model.
+
+The differences in kappa between configurations were small, at most 0.041. No adapter configuration had a lower kappa than the same model without an adapter. Using LoRA or IA$^3$ therefore did not make the recommendations harder to judge consistently. The only difference that remained statistically significant after correction was LoRA on Llama 3.1 8B. There was no consistent difference between LoRA and IA$^3$, because the better adapter was not the same for the two foundation models.
+
+The results for the IA$^3$ configurations show that kappa should be read together with the label distribution. These configurations received label 1 more often, which raised the chance agreement and lowered kappa relative to the observed agreement. Kappa measures how consistently the annotators judged the recommendations. It does not measure how accurate the recommendations are, so a higher kappa for one configuration does not show that its recommendations are better. The label shares in Table~\ref{tab:labels} point towards the IA$^3$ configurations as the ones whose recommendations the annotators accepted most often. A dedicated test of the label shares is needed to confirm this.
+
+Some limits apply to these results. The recommendations are for one city, Pula, and were rated by three annotators. The test set contains only the queries that were difficult during annotation, and the label shares were not tested statistically. These and other limits are discussed in Section~\ref{sec:limitations}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Limitations and Future Work}
+\section{Limitations and Future Work}\label{sec:limitations}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
