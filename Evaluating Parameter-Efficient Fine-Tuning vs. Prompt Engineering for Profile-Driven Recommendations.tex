@@ -225,17 +225,44 @@ This section details the experimental framework designed to evaluate and compare
 The proposed recommendation system is evaluated through a RAG framework tailored for structured POI data. The architecture deliberately isolates the retrieval mechanism to ensure a controlled, isolated comparison between two distinct Large Language Model (LLM) adaptation paradigms: Prompt Engineering and PEFT. Two foundation models—Llama 3.1 8B and Llama 3.2 3B—are evaluated to assess the scalability, robustness, and architectural generalizability of these adaptation strategies.
 
 \subsection{Data Collection and Vector Indexing}
-To simulate a real-world local recommendation engine, an exhaustive dataset of POIs within the city of Pula, Croatia, was curated via web scraping. The collected data spans multiple domains, including gastronomy, cultural heritage sites, and recreational areas.
+To simulate a real-world local recommendation engine, a dataset of POIs within the city of Pula, Croatia, was curated via web scraping. The final knowledge base contains 321 POIs of 32 types. Table~\ref{tab:poi} shows the ten most frequent types. The 126 gastronomy POIs (restaurants, cafes, fast food places and pubs) are the largest group. The remaining POIs include accommodation, cultural heritage sites and recreational areas.
+
+\begin{table}[H]
+\caption{Number of POIs in the knowledge base by type. The ten most frequent types are listed, and all remaining types are grouped as other.}\label{tab:poi}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{lCC}
+\toprule
+Type & POIs & Share of all POIs (\%)\\
+\midrule
+Restaurant & 74 & 23.1\\
+Cafe & 34 & 10.6\\
+Artwork & 24 & 7.5\\
+Fort & 18 & 5.6\\
+Information & 18 & 5.6\\
+Park & 16 & 5.0\\
+Hotel & 16 & 5.0\\
+Fast food & 15 & 4.7\\
+Attraction & 14 & 4.4\\
+Apartment & 14 & 4.4\\
+Other & 78 & 24.3\\
+\midrule
+Total & 321 & 100.0\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 The raw data was formalized into a standardized JSON schema. Each POI is represented as a single JSON object containing a categorical type and a nested properties dictionary. To enrich the semantic density of the dataset and improve personalized retrieval, the following key metadata fields were populated:
 
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
-\item Taxonomy Tags: An array of descriptors (e.g., mediterranean, vegetarian) defining the core attributes of the POI.
-\item Binary and Categorical Constraints: Features such as outdoor\_seating, indoor\_seating, and price (e.g., low, medium, high) that serve as strict filtering criteria.
-\item Contextual Narratives: Comprehensive textual descriptions and up to three verified user reviews to provide the embedding model with nuanced sentiment and atmospheric context.
+\item Identification and Contact Fields: The name of the POI for all POIs, and, for gastronomy POIs only, its phone number, opening hours and address (street and house number).
+\item Taxonomy Tags: An array of descriptors defining the core attributes of the POI, such as cuisine (e.g., mediterranean), dishes (e.g., pizza), dietary options (e.g., vegetarian) and location (e.g., city\_center). For some POIs, the tags are stored as a single text string instead of an array.
+\item Binary and Categorical Constraints: For gastronomy POIs, features such as outdoor\_seating, indoor\_seating, and price (low, medium or high) that serve as strict filtering criteria.
+\item Contextual Narratives: A textual description, a numeric rating and a list of user reviews, to provide the embedding model with nuanced sentiment and atmospheric context.
 \end{itemize}\vspace{3pt}
 
-Each JSON object was treated as an independent document chunk. To enable dense retrieval, embeddings were generated using the nomic-embed-text:v1.5 model, selected for its strong performance on heterogeneous text structures. The resulting vectors were indexed using Facebook AI Similarity Search (FAISS) to facilitate efficient similarity computations.
+Not every field is available for every POI. Missing values are stored as null. Tags are available for 295 of the 321 POIs, descriptions for 254, ratings for 229 and user reviews for 222. Ratings are between 2.5 and 5.0. A POI has between one and five reviews, most often three. Among the 126 gastronomy POIs, the price is available for 91, the phone number for 108 and the opening hours for 111.
+
+Each JSON object was treated as an independent document chunk, which gives 321 chunks. To enable dense retrieval, embeddings were generated using the nomic-embed-text:v1.5 model, selected for its strong performance on heterogeneous text structures. The resulting vectors were indexed using Facebook AI Similarity Search (FAISS) to facilitate efficient similarity computations.
 
 \subsection{Synthetic User Profile Generation and Ground Truth Annotation}
 Evaluating personalized recommendations necessitates a dataset that accurately models diverse user intents and constraints. We synthetically generated 5000 unique user profiles. Each profile represents a distinct permutation of demographic and behavioral traits, mapped to the JSON schema:
