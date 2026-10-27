@@ -117,7 +117,7 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1,521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041), only one of them (LoRA on Llama 3.1 8B) remained statistically significant after correction for multiple comparisons, and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
+\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041), only one of them (LoRA on Llama 3.1 8B) remained statistically significant after correction for multiple comparisons, and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
 
 % Keywords
 \keyword{large language models; parameter-efficient fine-tuning; prompt engineering; recommender systems; Low-Rank Adaptation (LoRA); structured data processing; in-context learning}
@@ -299,13 +299,13 @@ Test & 1521 & 30.4 & At least one annotator did not mark 1 & Evaluation of the s
 The training and validation splits therefore contain only responses that all three annotators accepted. The test split contains the remaining queries, which are the most challenging and subjective cases in the dataset. All six configurations were evaluated on the test split. The models without adapters did not use the training or validation splits.
 
 \subsection{Retrieval and Context Injection Pipeline}
-During inference, a standardized retrieval pipeline is maintained across all evaluated models to isolate the impact of the LLM adaptation strategy. For a given user input, the query is embedded and searched against the FAISS index.Initially, the vector database retrieves the top $K=30$ candidate chunks based on vector distance. To maximize the signal-to-noise ratio within the LLM context window, these 30 candidates are subsequently filtered, and only the top 10 most relevant JSON chunks are injected directly into the LLM prompt.
+During inference, a standardized retrieval pipeline is maintained across all evaluated models to isolate the impact of the LLM adaptation strategy. For a given user input, the query is embedded and searched against the FAISS index. The five chunks with the smallest vector distance are retrieved, and these five JSON chunks are injected directly into the LLM prompt.
 
 \subsection{LLM Adaptation Strategies}
 The study contrasts a robust Prompt Engineering baseline against two state-of-the-art PEFT methodologies:
 
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
-\item Prompt Engineering (Baseline): The foundation models are augmented with extended, highly structured system instructions. This method relies entirely on in-context learning, leveraging the top 10 retrieved chunks without any underlying weight updates.
+\item Prompt Engineering (Baseline): The foundation models are augmented with extended, highly structured system instructions. This method relies entirely on in-context learning, leveraging the five retrieved chunks without any underlying weight updates.
 \item Parameter-Efficient Fine-Tuning (PEFT): The models are fine-tuned on the consensus-driven training set using two distinct adapter mechanisms:
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
 \item Low-Rank Adaptation (LoRA): Freezes the pre-trained model weights and injects trainable rank decomposition matrices into the transformer architecture, allowing the model to learn domain-specific ranking logic.
@@ -313,7 +313,77 @@ The study contrasts a robust Prompt Engineering baseline against two state-of-th
 \end{itemize}\vspace{3pt}
 \end{itemize}\vspace{3pt}
 
-\subsection{Prompt Format and Inference Setup}
+\subsection{Adapter Training Configuration}\label{sec:training}
+Both adapter types were trained with the same procedure and the same hyperparameters. Each training example was formatted with the chat template of the foundation model and consisted of the system prompt, the user prompt (user profile, user question and retrieved local information) and the target response. The target response was the response generated by Qwen 3.6 35B that all three annotators had marked with 1. The 2609 queries of the training split were used to train the adapters, and the 870 queries of the validation split were used to monitor the training. The adapters were trained with the supervised fine-tuning trainer of the TRL library and the PEFT library. During training, the foundation models were loaded in bfloat16 precision without quantization. Table~\ref{tab:train_shared} lists the settings shared by both adapter types.
+
+\begin{table}[H]
+\caption{Training settings shared by the LoRA and IA$^3$ adapters.}\label{tab:train_shared}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{XC}
+\toprule
+Setting & Value\\
+\midrule
+Number of epochs & 3\\
+Learning rate & $2 \times 10^{-4}$\\
+Learning rate schedule & Linear decay after warmup\\
+Warmup ratio & 0.03\\
+Optimizer & AdamW\\
+Weight decay & 0\\
+Gradient clipping (maximum norm) & 1.0\\
+Batch size per GPU & 1\\
+Gradient accumulation steps & 8\\
+Number of GPUs & 2\\
+GPU type & NVIDIA A100\\
+Effective batch size & 16\\
+Maximum sequence length (tokens) & 512\\
+Numerical precision & bfloat16\\
+Gradient checkpointing & Yes\\
+Random seed & 42\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The effective batch size was 16 examples, which is a batch size of 1 on each of the two NVIDIA A100 GPUs multiplied by 8 gradient accumulation steps. The validation loss was calculated every 50 steps, and a checkpoint was saved at the same interval. The checkpoint with the lowest validation loss was used as the final adapter. Table~\ref{tab:train_adapter} lists the settings that are specific to each adapter type.
+
+\begin{table}[H]
+\caption{Settings specific to each adapter type.}\label{tab:train_adapter}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Setting & LoRA & IA$^3$\\
+\midrule
+Rank & 32 & Not applicable\\
+Scaling factor (alpha) & 64 & Not applicable\\
+Dropout & 0.05 & Not applicable\\
+Bias & None & Not applicable\\
+Target modules & q\_proj, k\_proj, v\_proj, o\_proj, gate\_proj, up\_proj, down\_proj & k\_proj, v\_proj, down\_proj\\
+Feed-forward modules & Not applicable & down\_proj\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+LoRA was applied to all attention and feed-forward projection layers of the transformer blocks, with trainable matrices of rank 32. IA$^3$ was applied only to the key, value and down projection layers. It trains one scaling vector for each of these layers, which rescales the outputs of the key and value projections and the input of the down projection, so it has far fewer trainable parameters than LoRA. At inference, the trained adapters were applied to foundation models loaded with 4-bit quantization (Section~\ref{sec:inference}).
+
+Table~\ref{tab:train_results} shows the number of trainable parameters, the training time and the final losses for the four adapters. The checkpoint with the lowest validation loss was the last checkpoint for all four adapters.
+
+\begin{table}[H]
+\caption{Trainable parameters, training time, final training loss and validation loss of the four adapters. The training time is given in minutes.}\label{tab:train_results}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{tabularx}{\textwidth}{XCCCC}
+\toprule
+Configuration & Trainable parameters & Training time (min) & Training loss & Validation loss\\
+\midrule
+Llama 3.1 8B + LoRA & 83,886,080 & 28.5 & 0.088 & 0.102\\
+Llama 3.1 8B + IA$^3$ & 524,288 & 16.2 & 1.385 & 1.421\\
+Llama 3.2 3B + LoRA & 48,627,712 & 24.5 & 0.094 & 0.108\\
+Llama 3.2 3B + IA$^3$ & 286,720 & 12.5 & 1.832 & 1.878\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Training took between 12.5 and 28.5 minutes. LoRA has about 160 times more trainable parameters than IA$^3$ for Llama 3.1 8B and about 170 times more for Llama 3.2 3B. The loss values of the LoRA adapters (about 0.1) are much lower than those of the IA$^3$ adapters (1.4 and 1.9).
+
+\subsection{Prompt Format and Inference Setup}\label{sec:inference}
 All six configurations received the same system prompt and the same user prompt format. The system prompt instructs the model to act as a tourism assistant that recommends personalized activities based on the interests in the user profile, the current question of the user, and the local information retrieved by semantic search. It also instructs the model to respect strong user preferences and to answer with a short and clear activity recommendation, followed by a brief explanation if needed. The user prompt contains the user profile (name, travel style, persona, likes, dislikes, price preference and minimum rating), the user question, and the retrieved local information as a list of bullet points.
 
 All foundation models were loaded with 4-bit NF4 quantization and double quantization. For the configurations with adapters, the trained LoRA or IA$^3$ adapter was loaded on top of the quantized foundation model.
