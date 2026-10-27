@@ -340,10 +340,10 @@ The observed agreement $\bar{P}$ was between 0.926 and 0.961. The chance agreeme
 \begin{figure}[H]
 \centering
 \includegraphics[width=12 cm]{figures/fig_kappa.png}
-\caption{Fleiss' kappa for the six configurations. The error bars show the 95\% bootstrap confidence intervals.}\label{fig:kappa}
+\caption{Fleiss' kappa for the six configurations.}\label{fig:kappa}
 \end{figure}
 
-Figure~\ref{fig:kappa} shows the same kappa values grouped by foundation model. The highest kappa was reached by Llama 3.2 3B + IA$^3$ (0.904), followed closely by Llama 3.1 8B + LoRA (0.902), and the lowest by Llama 3.1 8B without an adapter (0.863). The confidence intervals of all six configurations overlap. These intervals do not take into account that every configuration was rated on the same queries, so the paired comparisons in Section~\ref{sec:comparison} are used to test the differences between configurations.
+Figure~\ref{fig:kappa} shows the same kappa values grouped by foundation model. The highest kappa was reached by Llama 3.2 3B + IA$^3$ (0.904), followed closely by Llama 3.1 8B + LoRA (0.902), and the lowest by Llama 3.1 8B without an adapter (0.863). The differences between the configurations are small. The confidence intervals are given in Table~\ref{tab:kappa}, and the paired comparisons in Section~\ref{sec:comparison} are used to test the differences between configurations, because they take into account that every configuration was rated on the same queries.
 
 \subsection{Distribution of the Labels}\label{sec:labels}
 Table~\ref{tab:labels} and Figure~\ref{fig:labels} show how often each label was used. These counts are descriptive. They are reported to show what the annotators decided and to explain the chance agreement in Table~\ref{tab:kappa}.
