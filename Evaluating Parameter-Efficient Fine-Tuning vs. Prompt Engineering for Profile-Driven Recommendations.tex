@@ -117,7 +117,7 @@ $^{1}$ \quad Faculty of Informatics, Juraj Dobrila University of Pula, Zagrebač
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized item recommendation. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041), only one of them (LoRA on Llama 3.1 8B) remained statistically significant after correction for multiple comparisons, and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
+\abstract{Large language models (LLMs) show significant promise for personalized recommendation systems, yet identifying the most effective adaptation strategy for structured data remains a challenge. This study compares parameter-efficient fine-tuning (PEFT) and in-context learning approaches for personalized point-of-interest recommendation in Pula, Croatia. We utilized explicit user profiles, encompassing specific likes and dislikes, alongside a comprehensive JSON-formatted item catalog. Two distinct adaptation paradigms were compared on Llama 3.1 8B and Llama 3.2 3B: PEFT, specifically Low-Rank Adaptation (LoRA) and Infused Adapter by Inhibiting and Amplifying Inner Activations (IA$^3$), against prompt engineering strategies optimizing input instructions without altering model weights. Because personalized recommendation is inherently subjective and has no objective ground truth, three human annotators independently judged 1521 recommendations per configuration as agreeing (1), disagreeing ($-1$) or neither (0) with the recommendation, and the consistency of their judgments was quantified using Fleiss' kappa ($\kappa$). Agreement was almost perfect in all six configurations ($\kappa$ between 0.863 and 0.904), indicating a reliable evaluation protocol. Fine-tuned adapters yielded higher agreement than the prompt-engineered baseline for both foundation models, although the differences between configurations were small (at most 0.041), only one of them (LoRA on Llama 3.1 8B) remained statistically significant after correction for multiple comparisons, and no single adapter type was consistently superior across models. These results show that adapter-based fine-tuning produces recommendations whose relevance to explicit user profiles is judged at least as consistently as that of prompt engineering alone.}
 
 % Keywords
 \keyword{large language models; parameter-efficient fine-tuning; prompt engineering; recommender systems; Low-Rank Adaptation (LoRA); structured data processing; in-context learning}
@@ -218,7 +218,7 @@ Based on the cumulative evidence from previous studies, the goal of this work is
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
 
-This section details the experimental framework designed to evaluate and compare the efficacy of parameter-efficient fine-tuning (PEFT) against prompt engineering for personalized point-of-interest (POI) recommendation. We outline the data collection process, the synthesis of user profiles for ground-truth annotation, the retrieval-augmented generation (RAG) pipeline, and the specific adaptation strategies applied to the foundation models.
+This section details the experimental framework designed to evaluate and compare the efficacy of parameter-efficient fine-tuning (PEFT) against prompt engineering for personalized point-of-interest (POI) recommendation. We outline the data collection process, the synthesis of user profiles for ground-truth annotation, the retrieval-augmented generation (RAG) pipeline, the specific adaptation strategies applied to the foundation models, and the evaluation protocol based on inter-rater agreement.
 
 \subsection{System Architecture Overview}
 
@@ -256,7 +256,7 @@ The raw data was formalized into a standardized JSON schema. Each POI is represe
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
 \item Identification and Contact Fields: The name of the POI for all POIs, and, for gastronomy POIs only, its phone number, opening hours and address (street and house number).
 \item Taxonomy Tags: An array of descriptors defining the core attributes of the POI, such as cuisine (e.g., mediterranean), dishes (e.g., pizza), dietary options (e.g., vegetarian) and location (e.g., city\_center). For some POIs, the tags are stored as a single text string instead of an array.
-\item Binary and Categorical Constraints: For gastronomy POIs, features such as outdoor\_seating, indoor\_seating, and price (low, medium or high) that serve as strict filtering criteria.
+\item Binary and Categorical Constraints: For gastronomy POIs, features such as outdoor\_seating, indoor\_seating, and price (low, medium or high) that describe the practical constraints of the POI.
 \item Contextual Narratives: A textual description, a numeric rating and a list of user reviews, to provide the embedding model with nuanced sentiment and atmospheric context.
 \end{itemize}\vspace{3pt}
 
@@ -280,7 +280,7 @@ To establish a high-quality ground truth for training and evaluation, the Qwen 3
 Each of the three annotators independently marked every response with 1 (agree), 0 (neither) or $-1$ (disagree). These labels were used to divide the dataset into training, validation and test splits, as described in Section~\ref{sec:dataset}.
 
 \subsection{Dataset Composition and Splits}\label{sec:dataset}
-The dataset contains 5000 records, one for each synthetic user profile. Each record contains the profile fields (user identifier, name, age, gender, nationality, travel style, persona, likes, dislikes, price preference and minimum rating), the natural language query, the retrieved local information, the initial response generated by Qwen 3.6 35B, and the annotator labels. The retrieved local information is a numbered list of POI records in the JSON format described above, each with its type, name, tags, description, rating and reviews. The records were divided into three splits that do not overlap, based on the labels given by the three annotators. Table~\ref{tab:splits} shows the number of queries and the selection rule for each split.
+The dataset is synthetic: the 5000 user profiles and their queries were generated and were not collected from real users. The dataset contains 5000 records, one for each synthetic user profile. Each record contains the profile fields (user identifier, name, age, gender, nationality, travel style, persona, likes, dislikes, price preference and minimum rating), the natural language query, the retrieved local information, the initial response generated by Qwen 3.6 35B, and the annotator labels. The retrieved local information is a numbered list of POI records in the JSON format described above, each with its type and its properties. The records were divided into three splits that do not overlap, based on the labels given by the three annotators. Table~\ref{tab:splits} shows the number of queries and the selection rule for each split.
 
 \begin{table}[H]
 \caption{Splits of the dataset.}\label{tab:splits}
@@ -389,7 +389,7 @@ All six configurations received the same system prompt and the same user prompt 
 All foundation models were loaded with 4-bit NF4 quantization and double quantization. For the configurations with adapters, the trained LoRA or IA$^3$ adapter was loaded on top of the quantized foundation model.
 
 \subsection{Evaluation Protocol and Inter-Rater Agreement}\label{sec:eval}
-Six configurations were evaluated: Llama 3.1 8B and Llama 3.2 3B, each under prompt engineering, LoRA and IA$^3$. Each configuration generated recommendations for the same set of 1521 test queries. The same three annotators rated all recommendations. They were not told which model or adaptation method produced each recommendation. For every recommendation, the three annotators independently assigned one of three labels: 1 (the annotator agrees with the recommendation), $-1$ (the annotator disagrees) or 0 (neither). Since no objective ground truth exists for subjective recommendation quality, the evaluation relies on the consistency of these independent judgments, quantified with Fleiss' kappa.
+Six configurations were evaluated: Llama 3.1 8B and Llama 3.2 3B, each under prompt engineering, LoRA and IA$^3$. In the tables and figures, the configurations that use prompt engineering only are named after the foundation model (Llama 3.1 8B and Llama 3.2 3B), and the configurations with adapters carry the adapter name (for example, Llama 3.1 8B + LoRA). Each configuration generated recommendations for the same set of 1521 test queries. The same three annotators rated all recommendations. They were not told which model or adaptation method produced each recommendation. For every recommendation, the three annotators independently assigned one of three labels: 1 (the annotator agrees with the recommendation), $-1$ (the annotator disagrees) or 0 (neither). Since no objective ground truth exists for subjective recommendation quality, the evaluation relies on the consistency of these independent judgments, quantified with Fleiss' kappa \citep{fleiss1971measuring}.
 
 Let $N$ be the number of evaluated recommendations, $n=3$ the number of annotators, $k=3$ the number of categories, and $n_{ij}$ the number of annotators who assigned recommendation $i$ to category $j$. The observed agreement for a single recommendation and its mean are
 
@@ -403,7 +403,7 @@ The expected chance agreement is computed from the overall proportion $p_j$ of r
 p_j = \frac{1}{Nn}\sum_{i=1}^{N} n_{ij}, \qquad \bar{P}_e = \sum_{j=1}^{k} p_j^{2}, \qquad \kappa = \frac{\bar{P} - \bar{P}_e}{1 - \bar{P}_e}.
 \end{equation}
 
-A value of $\kappa = 1$ indicates perfect agreement, while $\kappa = 0$ indicates agreement no better than chance. Values are interpreted using the scale of Landis and Koch \citep{landis1977measurement}: slight (0.01--0.20), fair (0.21--0.40), moderate (0.41--0.60), substantial (0.61--0.80) and almost perfect (0.81--1.00) agreement \citep{fleiss1971measuring}. Fleiss' kappa expresses how consistently annotators judge the recommendations, not whether the judgments are correct. Uncertainty was estimated by nonparametric bootstrap, resampling queries with replacement (20,000 replicates) and reporting 95\% percentile intervals. Nine comparisons were planned: each adapter configuration against the same model without an adapter (four comparisons), LoRA against IA$^3$ for each model (two comparisons), and the same configuration (without adapter, with LoRA and with IA$^3$) on the two foundation models (three comparisons). The differences in kappa were estimated with a paired bootstrap on the same resampled queries. Because nine comparisons were made, the two-sided p-values were adjusted with the Holm method, which reduces the chance of false positive findings when several comparisons are tested together.
+A value of $\kappa = 1$ indicates perfect agreement, while $\kappa = 0$ indicates agreement no better than chance. Values are interpreted using the scale of Landis and Koch \citep{landis1977measurement}: slight (0.01--0.20), fair (0.21--0.40), moderate (0.41--0.60), substantial (0.61--0.80) and almost perfect (0.81--1.00) agreement. Fleiss' kappa expresses how consistently annotators judge the recommendations, not whether the judgments are correct. Uncertainty was estimated by nonparametric bootstrap, resampling queries with replacement (20000 replicates) and reporting 95\% percentile intervals. Nine comparisons were planned: each adapter configuration against the same model without an adapter (four comparisons), LoRA against IA$^3$ for each model (two comparisons), and the same configuration (without adapter, with LoRA and with IA$^3$) on the two foundation models (three comparisons). The differences in kappa were estimated with a paired bootstrap on the same resampled queries. Because nine comparisons were made, the two-sided p-values were adjusted with the Holm method, which reduces the chance of false positive findings when several comparisons are tested together.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results and discussion}\label{sec:results}
@@ -510,16 +510,39 @@ The differences in kappa between configurations were small, at most 0.041. No ad
 
 The results for the IA$^3$ configurations show that kappa should be read together with the label distribution. These configurations received label 1 more often, which raised the chance agreement and lowered kappa relative to the observed agreement. Kappa measures how consistently the annotators judged the recommendations. It does not measure how accurate the recommendations are, so a higher kappa for one configuration does not show that its recommendations are better. The label shares in Table~\ref{tab:labels} point towards the IA$^3$ configurations as the ones whose recommendations the annotators accepted most often. A dedicated test of the label shares is needed to confirm this.
 
+The label shares also show that the LoRA configurations received label 1 less often than the IA$^3$ configurations, although LoRA trains many more parameters. LoRA on Llama 3.2 3B had a slightly lower share of label 1 (53.7\%) than the same model without an adapter (55.5\%). This study did not test the reason for this, but some observations from the training can be noted. The LoRA adapters reached a much lower training and validation loss (about 0.1) than the IA$^3$ adapters (1.4 and 1.9, Table~\ref{tab:train_results}), so they fitted the training data much more closely. A close fit to the training data does not always lead to better results on new queries. The training set was also small (2609 queries), and its prompts were built from the same 321 POIs. In addition, one setting was used for both adapter types and was not tuned for each of them, and each adapter was trained only once. Any of these factors could have contributed to the result, and they should be checked in further work. The agreement measured with kappa did not show the same pattern: LoRA had a higher kappa than the model without an adapter for both foundation models.
+
 Some limits apply to these results. The recommendations are for one city, Pula, and were rated by three annotators. The test set contains only the queries that were difficult during annotation, and the label shares were not tested statistically. These and other limits are discussed in Section~\ref{sec:limitations}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Limitations and Future Work}\label{sec:limitations}
 
+This section describes the limitations of the study and proposes directions for future work. The limitations concern the evaluation measure, the data, the models and training, and the settings used for inference. The future work follows from these limitations.
+
+\subsection{Limitations}
+The evaluation in this study is based on Fleiss' kappa, which measures how consistently the three annotators judged the recommendations. A high kappa shows that the annotators agreed with each other. It does not show that a recommendation is correct or that its quality is high. Even when all three annotators mark a response as good, this shows that they agree on it, but it does not measure the quality of the recommendation. Personalized recommendation is subjective, and no objective ground truth exists. The shares of the labels in Table~\ref{tab:labels} were reported only as descriptive counts and were not tested statistically. For this reason, the study cannot state which configuration gives better recommendations.
+
+Only responses that all three annotators marked with 1 were used for training and validation. This choice made the training data reliable, but it means that the annotation step was not summarized with an agreement statistic. All training responses were also generated by one model, Qwen 3.6 35B, so the adapters learned from the content and style of a single model. The test set of 1521 queries was used to test the configurations after training. It contains the queries for which the annotators did not all mark the initial response with 1, so these queries are more difficult and more subjective than the rest of the dataset. The results therefore show how the configurations behave on difficult cases, and they may be different for a random sample of queries.
+
+The user profiles and queries are synthetic. Real users may write their requests in a different way, with different wording, length and level of detail, so the results may not transfer directly to real requests. The knowledge base covers one small city, Pula, with 321 POIs, and the system was not tested on a large city with many more POIs. Each POI is stored as one JSON object that contains all of its fields, and this design may not work as well for a much larger number of POIs. The results could be different for larger cities for this reason.
+
+Only two foundation models were used, Llama 3.1 8B and Llama 3.2 3B, and both belong to the same model family. Each adapter was trained once, with one random seed and one set of hyperparameters, which was the same for LoRA and IA$^3$. The settings were not tuned separately for each adapter type, so a different setting could favor one adapter type. The bootstrap confidence intervals describe the variation between test queries. They do not describe the variation between training runs, which can only be measured by training the same adapter several times.
+
+All six configurations were evaluated with 4-bit quantization, while the adapters were trained on models loaded without quantization. Quantization changes the model weights slightly, so an adapter may behave differently on a quantized model than on the model it was trained on. An evaluation without quantization was not done, and the results may be different at full precision. Finally, the study did not measure inference latency or cost. The training time and the number of trainable parameters were reported, but the time and cost needed to generate recommendations were not compared between the configurations.
+
+\subsection{Future Work}
+Several directions follow from these limitations. The first is to test more foundation models, including models from other families and models of different sizes, to check whether the results are specific to the two Llama models. The second is to build knowledge bases for other cities, including large cities with many more POIs, and to include more POI types. This would show whether storing each POI as one JSON object and retrieving five chunks still works at a larger scale.
+
+The third direction is to train each adapter several times with different random seeds, so that the variation between training runs can be measured and reported together with the variation between test queries. The fourth is to evaluate the configurations with real user profiles and real questions written by people, in place of synthetic data. The fifth direction is to tune the hyperparameters, such as the rank, the learning rate and the number of epochs, separately for each adapter type, and to check why LoRA did not improve on the model without an adapter for Llama 3.2 3B. Finally, a statistical test of how often the annotators accept the recommendations of each configuration would add a measure of recommendation quality to the measure of agreement used here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 
-This section is not mandatory, but can be added to the manuscript if the discussion is unusually long or complex.
+This study compared two parameter-efficient fine-tuning methods, LoRA and IA$^3$, with prompt engineering for personalized point-of-interest recommendation in the city of Pula. Llama 3.1 8B and Llama 3.2 3B were used, which gave six configurations. Three annotators rated the recommendations of each configuration for 1521 test queries, without knowing which model produced them. The agreement of the annotators, measured with Fleiss' kappa, was between 0.863 and 0.904 for all six configurations, which is almost perfect agreement. The evaluation protocol therefore gave consistent judgments for every adaptation strategy.
+
+All four adapter configurations had a higher kappa than the same model without an adapter, but the differences were small. Only LoRA on Llama 3.1 8B remained statistically significant after correction for multiple comparisons. Neither adapter type was consistently better than the other, and the same configuration did not differ significantly between the two foundation models.
+
+The annotators agreed with the recommendations of the IA$^3$ configurations most often (77.7\% and 74.8\% of the ratings), and IA$^3$ trains about 160 to 170 times fewer parameters than LoRA. These counts were not tested statistically. Fleiss' kappa measures how consistently the annotators judged the recommendations, not the quality of the recommendations, so the study does not show which configuration gives the best recommendations. The study used synthetic profiles and queries, one small city, two Llama models and one training run for each adapter. These limitations and the planned future work are described in Section~\ref{sec:limitations}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \vspace{6pt} 
@@ -591,19 +614,24 @@ The following abbreviations are used in this manuscript:
 
 \noindent 
 \begin{tabular}{@{}ll}
-LLMs & Large Language Models\\
-NLP & Natural Language Processing\\
-PEFT & Parameter-Efficient Fine-Tuning\\
-LoRA & Low-Rank Adaptation\\
-IA$^3$ & Infused Adapter by Inhibiting and Amplifying Inner Activations\\
-ICL & In-Context Learning\\
-JSON & JavaScript Object Notation\\
-SFT & Supervised Fine-Tuning\\
+AI & Artificial Intelligence\\
+API & Application Programming Interface\\
+BERT & Bidirectional Encoder Representations from Transformers\\
+CI & Confidence Interval\\
+FAISS & Facebook AI Similarity Search\\
+GPT & Generative Pre-trained Transformer\\
 GPU & Graphics Processing Unit\\
-DDP & Distributed Data Parallel\\
-MLP & Multi-Layer Perceptron\\
-bf16 & BFloat16 Precision Format\\
-tf32 & TensorFloat-32\\
+IA$^3$ & Infused Adapter by Inhibiting and Amplifying Inner Activations\\
+JSON & JavaScript Object Notation\\
+LLM & Large Language Model\\
+LoRA & Low-Rank Adaptation\\
+NF4 & 4-bit NormalFloat\\
+PEFT & Parameter-Efficient Fine-Tuning\\
+POI & Point of Interest\\
+RAG & Retrieval-Augmented Generation\\
+T5 & Text-to-Text Transfer Transformer\\
+TRL & Transformer Reinforcement Learning\\
+$\kappa$ & Fleiss' kappa\\
 \end{tabular}
 }
 
